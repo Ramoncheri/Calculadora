@@ -1,18 +1,28 @@
-from tkinter import ttk
 from tkinter import *
+from tkinter import ttk
 
 
 class Controlador(ttk.Frame):
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent):  #**kwargs son parametros definidos por pares clave- valor: ej width o height  
         ttk.Frame.__init__(self, parent, width=272, height= 300)
-        
+        d= Display(self)
+        d.grid(column=0, row=0, columnspan=4)
+
+
+
+
 class Display(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent, width =272, height=50)
-        self.pack_propagate(1)
+        self.pack_propagate(0)
 
-        lbl= ttk.Label(self, text='0', anchor= E)
-        lbl.pack(side=TOP, fill= BOTH, expand= True)
+        s= ttk.Style()
+        s.theme_use('alt')
+        s.configure('my.TLabel', font='Helvetica 25', background= 'black', foreground= 'white')
+
+
+        lbl= ttk.Label(self, text='0', anchor= E, style='my.TLabel')
+        lbl.pack(side=TOP, fill=BOTH, expand= True)
 
             
 

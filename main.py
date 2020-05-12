@@ -13,7 +13,7 @@ class MainApp(Tk):
         self.pack_propagate(0)
 
         c= calculadora.Controlador(self) #es el self de mainApp. El padre de Controlador es MainApp
-        c.pack(side=TOP, fill= BOTH)
+        c.pack(side=TOP)#, fill=BOTH)
 
 
     def start(self):
