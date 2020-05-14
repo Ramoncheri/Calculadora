@@ -73,7 +73,7 @@ dbuttons = [
         "row": 1
     },
     {
-        "text": "÷",
+        "text": "/",
         "col": 3,
         "row": 1
     },
@@ -126,11 +126,24 @@ class Controlador(ttk.Frame):
             return self.op1+ self.op2
         elif self.operation == '-':
             return self.op1- self.op2
-        elif self.operation == '*':
+        elif self.operation == 'x':
             return self.op1* self.op2
         elif self.operation == '/':
             return self.op1/ self.op2
         return self.op2
+
+    def resultParcial(self, ctrButton):
+        if self.op1 == '':
+            self.op1 = self.to_float(self.dispValue)
+            self.operation= ctrButton
+            self.dispValue ='0'
+        else:
+            self.op2= self.to_float(self.dispValue)
+            res= self.calculate()
+            self.op1= res
+            self.op2= ''
+            self.operation= ctrButton
+            self.dispValue= '0'
 
     def set_operation (self, ctrButton):
 
@@ -152,22 +165,26 @@ class Controlador(ttk.Frame):
                 self.dispValue += str(ctrButton)
 
         if ctrButton == '+':
-            if self.op1 == '':
-                self.op1 = self.to_float(self.dispValue)
-                self.operation= ctrButton
-                self.dispValue ='0'
-            else:
-                self.op2= self.to_float(self.dispValue)
-                res= self.calculate()
-                self.op1= res
-                self.dispValue= '0'
+            self.resultParcial(ctrButton)
+
+        if ctrButton== '-':
+            self.resultParcial(ctrButton)
+
+        if ctrButton == 'x':
+            self.resultParcial(ctrButton)
+        
+        if ctrButton == '/':
+            self.resultParcial(ctrButton)
 
         if ctrButton == '=':
             self.op2= self.to_float(self.dispValue)
             res= self.calculate()
+            res= ('%.12g'%res)
             strRes= str(res)
             strRes= self.to_str(strRes)
             self.dispValue= strRes
+            self.op1= ''
+            self.op2= ''
 
         self.display.paint(self.dispValue)
 
