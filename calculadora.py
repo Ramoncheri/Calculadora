@@ -104,10 +104,7 @@ def pinta(valor):
 class Controlador(ttk.Frame):
     def __init__(self, parent):  #**kwargs son parametros definidos por pares clave- valor: ej width o height  
         ttk.Frame.__init__(self, parent, width=272, height= 300)
-        self.op1= ''
-        self.op2= 0
-        self.operation= ''
-        self.dispValue= '0'
+        self.reset()
 
         self.display= Display(self)
         self.display.grid(column=0, row=0, columnspan=4)
@@ -116,10 +113,18 @@ class Controlador(ttk.Frame):
             btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
             btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
 
+    def reset(self):
+        self.op1= ''
+        self.op2= ''
+        self.operation= ''
+        self.dispValue= '0'
+        self.signo_pulsado = False
+        
+
     def to_float(self, valor):
         return float(valor.replace(',','.'))
     def to_str(self, valor):
-        return valor.replace('.',',')
+        return str(valor).replace('.',',')
 
     def calculate(self):
         if self.operation == '+':
@@ -136,20 +141,39 @@ class Controlador(ttk.Frame):
         if self.op1 == '':
             self.op1 = self.to_float(self.dispValue)
             self.operation= ctrButton
-            self.dispValue ='0'
-        else:
-            self.op2= self.to_float(self.dispValue)
-            res= self.calculate()
-            self.op1= res
-            self.op2= ''
+            self.signo_pulsado = True
+        elif self.op2 == '':
+            self.result_total()
             self.operation= ctrButton
-            self.dispValue= '0'
+            self.signo_pulsado = True
+        elif self.signo_pulsado == False:
+            self.op2= ''
+            self.result_total()
+            self.operation= ctrButton
+            self.signo_pulsado= True
+        elif self.signo_pulsado == True:
+            if ctrButton == '+' or ctrButton =='-' or ctrButton=='x' or ctrButton== '/':
+                self.op2= ''
+                self.operation= ctrButton
+            if ctrButton== '=':
+                res= self.calculate()
+                self.op1= res
+                res= ('%.12g'%res)
+                self.dispValue= self.to_str(res)
+
+    def result_total(self):
+        self.op2= self.to_float(self.dispValue)
+        res= self.calculate()
+        self.op1= res
+        res= ('%.12g'%res)
+        self.dispValue= self.to_str(res)
+        #self.op2= ''
+           
 
     def set_operation (self, ctrButton):
 
         if ctrButton== 'C':
-            self.dispValue= '0'
-            self.op1 = ''
+            self.reset()
         if ctrButton== '+/-' and self.dispValue != '0':
             if self.dispValue[0] != '-':
                 self.dispValue = '-' + self.dispValue
@@ -159,32 +183,28 @@ class Controlador(ttk.Frame):
             self.dispValue += str(ctrButton)
 
         if ctrButton.isdigit():
-            if self.dispValue== '0':
+            if self.dispValue== '0' or self.signo_pulsado == True:
                 self.dispValue= ctrButton
+                self.signo_pulsado= False
             else:
                 self.dispValue += str(ctrButton)
+                
 
-        if ctrButton == '+':
-            self.resultParcial(ctrButton)
-
-        if ctrButton== '-':
-            self.resultParcial(ctrButton)
-
-        if ctrButton == 'x':
-            self.resultParcial(ctrButton)
-        
-        if ctrButton == '/':
+        if ctrButton == '+' or ctrButton =='-' or ctrButton=='x' or ctrButton== '/':
             self.resultParcial(ctrButton)
 
         if ctrButton == '=':
-            self.op2= self.to_float(self.dispValue)
-            res= self.calculate()
-            res= ('%.12g'%res)
-            strRes= str(res)
-            strRes= self.to_str(strRes)
-            self.dispValue= strRes
-            self.op1= ''
-            self.op2= ''
+            if self.op1 != 0 and self.op2 == '':
+                self.result_total()
+                self.signo_pulsado= True
+
+            elif self.op1 !=0 and self.op2 != 0:
+                #self.result_total()
+                self.resultParcial(ctrButton)
+                self.signo_pulsado= True
+
+                
+            
 
         self.display.paint(self.dispValue)
 
