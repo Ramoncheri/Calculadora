@@ -109,13 +109,17 @@ class Controlador(ttk.Frame):
         self.display= Display(self)
         self.display.grid(column=0, row=0, columnspan=4)
 
+        self.selector= Selector(self)
+        self.selector.grid(column=0, row=1)
+
+
         for props in dbuttons:
             btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
             btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
 
     def reset(self):
-        self.op1= ''
-        self.op2= ''
+        self.op1= None
+        self.op2= None
         self.operation= ''
         self.dispValue= '0'
         self.signo_pulsado = False
@@ -138,22 +142,22 @@ class Controlador(ttk.Frame):
         return self.op2
 
     def resultParcial(self, ctrButton):
-        if self.op1 == '':
+        if self.op1 == None:
             self.op1 = self.to_float(self.dispValue)
             self.operation= ctrButton
             self.signo_pulsado = True
-        elif self.op2 == '':
+        elif self.op2 == None:
             self.result_total()
             self.operation= ctrButton
             self.signo_pulsado = True
         elif self.signo_pulsado == False:
-            self.op2= ''
+            self.op2= None
             self.result_total()
             self.operation= ctrButton
             self.signo_pulsado= True
         elif self.signo_pulsado == True:
             if ctrButton == '+' or ctrButton =='-' or ctrButton=='x' or ctrButton== '/':
-                self.op2= ''
+                self.op2= None
                 self.operation= ctrButton
             if ctrButton== '=':
                 res= self.calculate()
@@ -194,11 +198,11 @@ class Controlador(ttk.Frame):
             self.resultParcial(ctrButton)
 
         if ctrButton == '=':
-            if self.op1 != 0 and self.op2 == '':
+            if self.op1 != None and self.op2 == None:
                 self.result_total()
                 self.signo_pulsado= True
 
-            elif self.op1 !=0 and self.op2 != 0:
+            elif self.op1 !=None and self.op2 != None:
                 #self.result_total()
                 self.resultParcial(ctrButton)
                 self.signo_pulsado= True
@@ -227,8 +231,25 @@ class Display(ttk.Frame):
         self.value= ctrButton
         self.lbl.config(text= self.value)
 
-class Selector(ttk.Radiobutton):
-    pass
+
+class Selector(ttk.Frame):
+    
+    def __init__(self, parent, status= 'N'):
+        ttk.Frame.__init__(self, parent, width= 68, height= 50)
+        self.status= status
+        self.__value= StringVar()  #variable de control de Tkinter
+        self.__value.set(self.status)  #se inicializa la variable de control
+        
+        rbtn_N= ttk.Radiobutton(self, text= 'N', value= 'N', name= 'btn_N', variable= self.__value, command= self.__click)
+        #rbtn_N.pack(side=TOP, fill= BOTH, expand= True)
+        rbtn_N.place(x=10, y=5)
+        rbtn_R= ttk.Radiobutton(self, text= 'R', value= 'R', name= 'btn_R', variable=self.__value, command= self.__click)
+        #rbtn_R.pack(side=TOP, fill= BOTH, expand= True)
+        rbtn_R.place(x=10, y=30)
+
+    def __click(self):
+        self.status= self.__value.get()
+
 
 class CalcButton(ttk.Frame):
     def __init__(self, parent, caracter, command, width=1, height=1):
