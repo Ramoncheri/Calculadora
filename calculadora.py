@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-dbuttons = [
+normal_buttons = [
     {
         "text": "1",
         "col": 0,
@@ -81,7 +81,7 @@ dbuttons = [
         "text": "0",
         "col": 0,
         "row": 5,
-        'W': 2
+        'W': 2   # numero de columnas de ancho
     },
     {
         "text": ",",
@@ -94,7 +94,76 @@ dbuttons = [
         "row": 5
     }
 ]
-
+roman_buttons= [
+    {
+    "text": "=",
+        "col": 0,
+        "row": 5,
+        "W": 4
+    },
+    {
+        "text": "I",
+        "col": 0,
+        "row": 4,
+    },
+    {
+        "text": "V",
+        "col": 1,
+        "row": 4,
+    },
+    {
+        "text": "X",
+        "col": 0,
+        "row": 3,
+    },
+    {
+        "text": "L",
+        "col": 1,
+        "row": 3,
+    },
+    {
+        "text": "C",
+        "col": 0,
+        "row": 2,
+    },
+    {
+        "text": "D",
+        "col": 1,
+        "row": 2,
+    },
+    {
+        "text": "M",
+        "col": 2,
+        "row": 2,
+        "H": 3
+    },
+    {
+        "text": "AC",
+        "col": 1,
+        "row": 1,
+        "W": 2
+    },
+    {
+        "text": "÷",
+        "col": 3,
+        "row": 1,
+    },
+    {
+        "text": "x",
+        "col": 3,
+        "row": 2,
+    },
+    {
+        "text": "-",
+        "col": 3,
+        "row": 3,
+    },
+    {
+        "text": "+",
+        "col": 3,
+        "row": 4,
+    }
+]
 
 def pinta(valor):
     print (valor)
@@ -105,17 +174,21 @@ class Controlador(ttk.Frame):
     def __init__(self, parent):  #**kwargs son parametros definidos por pares clave- valor: ej width o height  
         ttk.Frame.__init__(self, parent, width=272, height= 300)
         self.reset()
+        self.status= 'N'
 
         self.display= Display(self)
-        self.display.grid(column=0, row=0, columnspan=4)
+        self.display.grid(column=0, row=0)
 
-        self.selector= Selector(self)
+        self.keyboard= Keyboard(self, self.set_operation, self.status)
+        self.keyboard.grid( column= 0, row= 1)
+
+        self.selector= Selector(self.keyboard, self.change_status, self.status)
         self.selector.grid(column=0, row=1)
 
 
-        for props in dbuttons:
-            btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
-            btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+        #for props in dbuttons:
+            #btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
+           # btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
 
     def reset(self):
         self.op1= None
@@ -175,6 +248,17 @@ class Controlador(ttk.Frame):
            
 
     def set_operation (self, ctrButton):
+        if self.status== 'N':
+            self.set_operation_N(ctrButton)
+        else:
+            self.set_operation_R(ctrButton)
+
+        self.display.paint(self.dispValue)
+
+    def set_operation_R(self, ctrButton):
+        pass
+
+    def set_operation_N(self, ctrButton):
 
         if ctrButton== 'C':
             self.reset()
@@ -210,8 +294,11 @@ class Controlador(ttk.Frame):
                 
             
 
-        self.display.paint(self.dispValue)
+        
 
+    def change_status(self, status):
+        self.keyboard.status = status
+        self.reset()
 
 class Display(ttk.Frame):
     value= '0'
@@ -234,12 +321,13 @@ class Display(ttk.Frame):
 
 class Selector(ttk.Frame):
     
-    def __init__(self, parent, status= 'N'):
+    def __init__(self, parent, command, status= 'N'):
         ttk.Frame.__init__(self, parent, width= 68, height= 50)
         self.status= status
         self.__value= StringVar()  #variable de control de Tkinter
         self.__value.set(self.status)  #se inicializa la variable de control
-        
+        self.command= command
+
         rbtn_N= ttk.Radiobutton(self, text= 'N', value= 'N', name= 'btn_N', variable= self.__value, command= self.__click)
         #rbtn_N.pack(side=TOP, fill= BOTH, expand= True)
         rbtn_N.place(x=10, y=5)
@@ -249,7 +337,63 @@ class Selector(ttk.Frame):
 
     def __click(self):
         self.status= self.__value.get()
+        self.command(self.status)
 
+class Keyboard(ttk.Frame):
+    def __init__(self, parent, command, status= 'N'):
+        ttk.Frame.__init__(self, parent, height= 252, width= 272)
+        self.__status= status
+        self.listaBRomanos=[]
+        self.listaBNormales= []
+        self.command= command
+
+        if self.__status== 'N':
+            self.pintaNormal()
+        else:
+            self.pintaRomano()
+
+        
+
+        
+    
+    @property
+    def status(self):  #el @property hace que se convierta en un metodo getter
+        return self.__status
+    
+    @status.setter
+    def status(self, valor):  # se convierte en un metodo setter
+        self.__status= valor
+        if valor== 'N':
+            self.pintaNormal()
+        else:
+            self.pintaRomano()
+    
+    def pintaNormal(self):
+        if len(self.listaBNormales) == 0:
+            for props in normal_buttons:
+                btn= CalcButton(self, props['text'],self.command, props.get('W',1), props.get('H',1))  
+                self.listaBNormales.append((btn, props)) 
+                btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+        else:
+            for btn, props in self.listaBNormales:
+                btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+ 
+        for borra, props in self.listaBRomanos:
+            borra.grid_forget()
+
+
+    def pintaRomano(self):
+        if len(self.listaBRomanos)== 0:
+            for props in roman_buttons:
+                btn= CalcButton(self, props['text'],self.command, props.get('W',1), props.get('H',1)) 
+                self.listaBRomanos.append((btn, props))  
+                btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+        else:
+            for btn, props in self.listaBRomanos:
+                btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+        
+        for borra, props in self.listaBNormales:
+            borra.grid_forget()
 
 class CalcButton(ttk.Frame):
     def __init__(self, parent, caracter, command, width=1, height=1):
