@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from cromanos import *
 
 normal_buttons = [
     {
@@ -144,7 +145,7 @@ roman_buttons= [
         "W": 2
     },
     {
-        "text": "÷",
+        "text": "/",
         "col": 3,
         "row": 1,
     },
@@ -173,8 +174,8 @@ def pinta(valor):
 class Controlador(ttk.Frame):
     def __init__(self, parent):  #**kwargs son parametros definidos por pares clave- valor: ej width o height  
         ttk.Frame.__init__(self, parent, width=272, height= 300)
-        self.reset()
         self.status= 'N'
+        self.reset(self.status)
 
         self.display= Display(self)
         self.display.grid(column=0, row=0)
@@ -190,12 +191,15 @@ class Controlador(ttk.Frame):
             #btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
            # btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
 
-    def reset(self):
+    def reset(self, status):
         self.op1= None
         self.op2= None
         self.operation= ''
-        self.dispValue= '0'
         self.signo_pulsado = False
+        if self.status== 'N':
+            self.dispValue= '0'
+        if self.status== 'R':
+            self.dispValue= ''
         
 
     def to_float(self, valor):
@@ -245,7 +249,36 @@ class Controlador(ttk.Frame):
         res= ('%.12g'%res)
         self.dispValue= self.to_str(res)
         #self.op2= ''
+
+    def result_total_romano(self):
+        self.op2= self.n
+        res= self.calculate()
+        self.op1= res
+        self.dispValue= res
            
+    def resultParcial_romano(self, ctrButton):
+        if self.op1 == None:
+            self.op1 = self.n
+            self.operation= ctrButton
+            self.signo_pulsado = True
+        elif self.op2 == None:
+            self.result_total_romano()
+            self.operation= ctrButton
+            self.signo_pulsado = True
+        elif self.signo_pulsado == False:
+            self.op2= None
+            self.result_total_romano()
+            self.operation= ctrButton
+            self.signo_pulsado= True
+        elif self.signo_pulsado == True:
+            if ctrButton == '+' or ctrButton =='-' or ctrButton=='x' or ctrButton== '/':
+                self.op2= None
+                self.operation= ctrButton
+            if ctrButton== '=':
+                res= self.calculate()
+                self.op1= res
+                self.dispValue= res
+
 
     def set_operation (self, ctrButton):
         if self.status== 'N':
@@ -256,12 +289,49 @@ class Controlador(ttk.Frame):
         self.display.paint(self.dispValue)
 
     def set_operation_R(self, ctrButton):
-        pass
+        if ctrButton== 'AC':
+            self.reset('R')
+        
+        if ctrButton == '+' or ctrButton =='-' or ctrButton=='x' or ctrButton== '/':
+            self.n= RomanNumber(self.dispValue)
+            if self.n.value== 'Error de formato':
+                self.dispValue= self.n.value
+                self.n= None
+            else:
+                self.resultParcial_romano(ctrButton)
+                self.n= None
+
+
+        if ctrButton == '=':
+            
+            if self.op1 != None and self.op2 == None:
+                self.n=RomanNumber(self.dispValue)
+                
+                if self.n.value== 'Error de formato':
+                    self.dispValue= self.n.value
+                    self.n= None
+                else:
+                    self.result_total_romano()
+                    self.signo_pulsado= True
+                    self.n= None
+
+            elif self.op1 !=None and self.op2 != None:
+                self.n= RomanNumber(self.dispValue)
+                self.resultParcial_romano(ctrButton)
+                self.signo_pulsado= True
+
+        if ctrButton in 'IVXLCDM':
+            if self.dispValue== '0' or self.signo_pulsado== True:
+                self.dispValue= ctrButton
+                self.signo_pulsado= False
+            else:
+                self.dispValue += str(ctrButton)
+        
 
     def set_operation_N(self, ctrButton):
 
         if ctrButton== 'C':
-            self.reset()
+            self.reset('C')
         if ctrButton== '+/-' and self.dispValue != '0':
             if self.dispValue[0] != '-':
                 self.dispValue = '-' + self.dispValue
@@ -297,8 +367,9 @@ class Controlador(ttk.Frame):
         
 
     def change_status(self, status):
+        self.status= status
         self.keyboard.status = status
-        self.reset()
+        self.reset(self.status)
 
 class Display(ttk.Frame):
     value= '0'
@@ -323,9 +394,9 @@ class Selector(ttk.Frame):
     
     def __init__(self, parent, command, status= 'N'):
         ttk.Frame.__init__(self, parent, width= 68, height= 50)
-        self.status= status
+        self.statusSel= status
         self.__value= StringVar()  #variable de control de Tkinter
-        self.__value.set(self.status)  #se inicializa la variable de control
+        self.__value.set(self.statusSel)  #se inicializa la variable de control
         self.command= command
 
         rbtn_N= ttk.Radiobutton(self, text= 'N', value= 'N', name= 'btn_N', variable= self.__value, command= self.__click)
@@ -336,8 +407,8 @@ class Selector(ttk.Frame):
         rbtn_R.place(x=10, y=30)
 
     def __click(self):
-        self.status= self.__value.get()
-        self.command(self.status)
+        self.statusSel= self.__value.get()
+        self.command(self.statusSel)
 
 class Keyboard(ttk.Frame):
     def __init__(self, parent, command, status= 'N'):

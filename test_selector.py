@@ -8,7 +8,7 @@ from tkinter import ttk
 
 class TestSelector(TkinterTestCase.TkTestCase):
     def setUp(self):
-        self.s =calculadora.Selector(self.root)
+        self.s =calculadora.Selector(self.root, None)
         self.s.pack()
         self.s.wait_visibility()
 
@@ -29,7 +29,7 @@ class TestSelector(TkinterTestCase.TkTestCase):
         self.assertTrue(children['btn_N'].winfo_viewable(), 1)
 
     def test_init_value_R(self):
-        r_selector= calculadora.Selector(self.root,'R')
+        r_selector= calculadora.Selector(self.root, None,'R')
         self.assertEqual(r_selector.status, 'R')
         r_selector.update()
         r_selector.destroy()
