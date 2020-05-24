@@ -175,7 +175,7 @@ class Controlador(ttk.Frame):
     def __init__(self, parent):  #**kwargs son parametros definidos por pares clave- valor: ej width o height  
         ttk.Frame.__init__(self, parent, width=272, height= 300)
         self.status= 'N'
-        self.reset(self.status)
+        
 
         self.display= Display(self)
         self.display.grid(column=0, row=0)
@@ -186,10 +186,7 @@ class Controlador(ttk.Frame):
         self.selector= Selector(self.keyboard, self.change_status, self.status)
         self.selector.grid(column=0, row=1)
 
-
-        #for props in dbuttons:
-            #btn= CalcButton(self, props['text'], self.set_operation, props.get('W',1), props.get('H',1))   
-           # btn.grid(column= props['col'], row= props['row'], columnspan=props.get('W',1), rowspan=props.get('H',1))
+        self.reset(self.status)
 
     def reset(self, status):
         self.op1= None
@@ -198,8 +195,9 @@ class Controlador(ttk.Frame):
         self.signo_pulsado = False
         if self.status== 'N':
             self.dispValue= '0'
-        if self.status== 'R':
+        else:
             self.dispValue= ''
+        self.display.paint(self.dispValue)
         
 
     def to_float(self, valor):
